@@ -10,28 +10,10 @@ section: ethereum
   {% else %}
      <p>To learn how to implement these feeds, see the <a href="/docs/get-the-latest-price/">Ethereum Examples for Consuming Data Feeds</a>.</p>
      <p>For LINK token and Faucet details, see the <a href="/docs/link-token-contracts/">LINK Token Contracts</a> page.</p>
-     <h4>Ethereum Proof-of-Stake Merge</h4>
      <p>
        The Ethereum Merge is coming soon. See the <a href="/docs/ethereum-proof-of-stake-merge/">Ethereum Proof-of-Stake Merge</a> page to learn how Chainlink is supporting the Ethereum Merge.
      </p>
-     <p>
-        Ethereum developers and dApp teams should, at minimum, take the following actions to avoid unforeseen incidents and help protect end users:
-     </p>
-     <ul>
-        <li>Review all external dependencies that their contracts may rely upon</li>
-        <li>Test their smart contract deployments on <a href="https://ethereum.org/en/developers/docs/networks/#ethereum-testnets" target="_blank">Ethereum Proof-of-Stake testnets</a></li>
-        <li>Review the performance of their smart contracts under extreme market conditions and implement necessary safeguards to protect end-users</li>
-     </ul>
-     <p>
-     Chainlink Labs is not responsible for unforeseen incidents, including loss events, that may arise due to a failure to take the actions specified above.
-     </p>
 {% endcase %}
-
-<h4>Best practices for ETF and Forex feeds</h4>
-<ul>
-<li>Off-chain equity and ETF assets are traded only during standard market hours from 9:30AM to 4:00PM EDT Monday through Friday. <strong>Do not</strong> use these feeds outside of those windows.</li>
-<li>Assets on the Forex (Foreign Exchange) markets are traded only from 5PM EDT on Sunday through 4PM EDT on Friday. Additionally, some currencies might trade only during local banking hours. <strong>Do not</strong> use Forex feeds outside of market hours for the specific currency.</li>
-</ul>
 
 <style>
     table {
@@ -111,7 +93,7 @@ section: ethereum
 </style>
 
 <div id="categories">
-    <h4>Data feed categories</h4>
+    <p>Data feeds reside in the following categories:</p>
     <ul>
       <li>🟢 <a href="/docs/selecting-data-feeds/#🟢-verified-feeds"><strong>Verified Feeds</strong></a>: Feeds that follow a standardized data feeds workflow</li>
       <li>🟡 <a href="/docs/selecting-data-feeds/#🟡-monitored-feeds"><strong>Monitored Feeds</strong></a>: Feeds under review by the Chainlink Labs team to support the stability of the broader ecosystem</li>
@@ -158,65 +140,58 @@ section: ethereum
     }
     render = (data) => {
         let html = '';
-        if(data["{{stub}}"]) {
-            for(let network of data["{{stub}}"].networks) {
-                if (network.dataType == "default") {
-                    html += `<h2 id="${network.name}">${network.name} <a class="anchor" href="#${network.name}"><img src="/images/link.svg" alt="Link to this section"></a></h2>`;
-                    if(network.name == "Kovan Testnet (Deprecated)" || network.name == "Rinkeby Testnet (Deprecated)") {
-                        html += `<rdme-callout theme="warn"><p>This network is <a href="https://ethereum.org/en/developers/docs/networks/#ethereum-testnets" target="_blank" rel="noopener">officially deprecated</a> and is no longer supported. <a href="#Goerli%20Testnet">Goerli</a> is the recommended testnet for Chainlink on Ethereum.</p></rdme-callout>`
-                    }
-                    html += `<label><input type="checkbox" class="extra" ${showExtraDetails ? 'checked="checked"' : ''}>Show more details</input></label>`;
-                    let proxyList = '';
-                    for(let proxy of network.proxies) {
-                        proxyList += `
-                        <tr id="${network.name} ${proxy.pair}">
-                        <td><div class="proxy-pair-column">${feedCategories[proxy.feedCategory] || ''}<code class="proxy-pair">${proxy.pair}</code></div>
-                            ${ proxy.shutdownDate ? '<hr class="shutDate"></hr><div class="shutDate">Deprecating:<br/>' + proxy.shutdownDate + '</div>' : '' }
-                            </td>
-                        `;
-                        if(network.networkType == "mainnet") {
+        if(data) {
+            for(let chain in data){
+                for(let network of data[chain].networks) {
+                    if (network.dataType == "por") {
+                        html += `<h2 id="${network.name}">${network.name} <a class="anchor" href="#${network.name}"><img src="/images/link.svg" alt="Link to this section"></a></h2>`;
+                        if(network.name == "Kovan Testnet (Deprecated)" || network.name == "Rinkeby Testnet (Deprecated)") {
+                            html += `<rdme-callout theme="warn"><p>This network is <a href="https://ethereum.org/en/developers/docs/networks/#ethereum-testnets" target="_blank" rel="noopener">officially deprecated</a> and is no longer supported. <a href="#Goerli%20Testnet">Goerli</a> is the recommended testnet for Chainlink on Ethereum.</p></rdme-callout>`
+                        }
+                        html += `<label><input type="checkbox" class="extra" ${showExtraDetails ? 'checked="checked"' : ''}>Show more details</input></label>`;
+                        let proxyList = '';
+                        for(let proxy of network.proxies) {
                             proxyList += `
-                            <td><code>${proxy.assetName}</code></td>
-                            <td><code>${proxy.feedType}</code></td>
-                            `;
-                        }else {
-                            proxyList += `
-                            </td>
+                            <tr id="${network.name} ${proxy.pair}">
+                                <td rowspan="2" ><div class="proxy-pair-column">${feedCategories[proxy.feedCategory] || ''}<code class="proxy-pair">${proxy.pair}</code></div>
+                                ${ proxy.shutdownDate ? '<hr class="shutDate"></hr><div class="shutDate">Deprecating:<br/>' + proxy.shutdownDate + '</div>' : '' }
+                                </td>
+                                <td><a href="${network.url.replace('%s',proxy.proxy)}"><code>${proxy.proxy}</code></a></td>
+                                <td rowspan="2" ${ showExtraDetails ? '' : 'class="detail-hidden"'}>${proxy.deviationThreshold ? (proxy.deviationThreshold + '%') : 'N/A'}</td>
+                                <td rowspan="2" ${ showExtraDetails ? '' : 'class="detail-hidden"'}>${proxy.heartbeat ? proxy.heartbeat : 'N/A'}</td>
+                                <td rowspan="2" ${ showExtraDetails ? '' : 'class="detail-hidden"'}>${proxy.decimals ? proxy.decimals : 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <ul>
+                                        <li>Asset: <code>${proxy.assetName}</code></li>
+                                        <li>Reserve type: <code>${proxy.por.type}</code></li>
+                                        <li>Source: <a href="${proxy.por.source}" target="_blank">${proxy.por.source}</a></li>
+                                    </ul>
+                                </td>
+                            </tr>
                             `;
                         }
-                        proxyList += `
-                            <td ${ showExtraDetails ? '' : 'class="detail-hidden"'}>${proxy.deviationThreshold ? (proxy.deviationThreshold + '%') : 'N/A'}</td>
-                            <td ${ showExtraDetails ? '' : 'class="detail-hidden"'}>${proxy.heartbeat ? proxy.heartbeat : 'N/A'}</td>
-                            <td ${ showExtraDetails ? '' : 'class="detail-hidden"'}>${proxy.decimals ? proxy.decimals : 'N/A'}</td>
-                            <td><a href="${network.url.replace('%s',proxy.proxy)}"><code>${proxy.proxy}</code></a></td>
-                        </tr>`;
-                    }
 
-                    html += `
-                        <table>
-                        <thead>
-                        <tr>
-                        <th>Pair</th>
-                    `;
-
-                    if(network.networkType == "mainnet") {
                         html += `
-                            <th>Asset</th>
-                            <th>Type</th>
+                            <table>
+                            <thead>
+                            <tr>
+                            <th>PoR feed</th>
+                            <th>Address and info</th>
                         `;
+
+                        html += `
+                            <th ${ showExtraDetails ? '' : 'class="detail-hidden"'}>Deviation</th>
+                            <th ${ showExtraDetails ? '' : 'class="detail-hidden"'}>Heartbeat</th>
+                            <th ${ showExtraDetails ? '' : 'class="detail-hidden"'}>Dec</th>
+                            </tr>
+                            </thead>
+                            <tbody>${proxyList}</tbody>
+                            </table>
+                        `;
+
                     }
-
-                    html += `
-                        <th ${ showExtraDetails ? '' : 'class="detail-hidden"'}>Deviation</th>
-                        <th ${ showExtraDetails ? '' : 'class="detail-hidden"'}>Heartbeat</th>
-                        <th ${ showExtraDetails ? '' : 'class="detail-hidden"'}>Dec</th>
-                        <th>Address</th>
-                        </tr>
-                        </thead>
-                        <tbody>${proxyList}</tbody>
-                        </table>
-                    `;
-
                 }
             }
         } else {
@@ -235,7 +210,7 @@ section: ethereum
     if(window.location.host === 'localhost:4200') {
         path = '/addresses/addresses.json';
     }else if(window.location.host.includes('chainlinklabs.vercel.app')){
-        path = 'https://raw.githubusercontent.com/smartcontractkit/documentation/addresses-preview/_src/addresses/addresses-preview.json';
+        path = 'https://raw.githubusercontent.com/smartcontractkit/documentation/addresses-preview/_src/addresses/addresses-por-preview.json';
     }
     fetch(path)
     .then(response => response.json())
